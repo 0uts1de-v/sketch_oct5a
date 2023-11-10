@@ -56,12 +56,6 @@ void setup() {
 void loop() {
 
   if (DEBUG) {
-    line_01 = CdS_01.get_onblackline(); // left
-    line_02 = CdS_02.get_onblackline(); // right
-    dist_01 = SR04_01.get_distance(); // left
-    dist_02 = SR04_02.get_distance(); // right
-    dist_03 = SR04_03.get_distance(); // front
-
     char s[128];
     sprintf(s, "CdS_left: %s  CdS_right: %s  ", line_01 ? "true" : "false", line_02 ? "true" : "false");
     Serial.print(s);
@@ -128,6 +122,18 @@ void linetrace() {
         L298N.right_wheel(0);
       }
     }
+    if (DEBUG) {
+    char s[128];
+    sprintf(s, "CdS_left: %s  CdS_right: %s  ", line_01 ? "true" : "false", line_02 ? "true" : "false");
+    Serial.print(s);
+    Serial.print("SR04_left: ");
+    Serial.print(dist_01);
+    Serial.print("  SR04_right: ");
+    Serial.print(dist_02);
+    Serial.print("  SR04_front: ");
+    Serial.print(dist_03);
+    Serial.print("\n");
+  }
   }
 }
 
