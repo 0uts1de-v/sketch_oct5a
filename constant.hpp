@@ -19,7 +19,7 @@
 #define DEBUG true
 // シリアルでいろいろ出力する
 
-#define TESTMODE true
+#define TESTMODE false
 // 走行テスト
 
 #endif

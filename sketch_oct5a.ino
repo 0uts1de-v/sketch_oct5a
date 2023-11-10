@@ -27,9 +27,9 @@ const int CdS_02_PIN = 1;
 //----------END pin numbers----------
 
 //----------START prototype----------
-void linetrace(bool, bool);
-void ultrasonic(double, double, double);
-void obstacle(bool, bool, double, double, double);
+void linetrace();
+void ultrasonic();
+void obstacle();
 void testrun();
 //----------END prototype----------
 
@@ -37,45 +37,33 @@ void testrun();
 L298N_ L298N;
 SR04_ SR04_01, SR04_02, SR04_03;
 CdS_ CdS_01, CdS_02;
-const unsigned long boot_time = millis();
+const auto boot_time = millis();
+double dist_01 = 0, dist_02 = 0, dist_03 = 0;
+bool line_01 = false, line_02 = false;
 //----------END global var----------
 
 void setup() {
   if (DEBUG) Serial.begin(115200);
 
   L298N.attach(L298N_IN1, L298N_IN2, L298N_ENA, L298N_IN3, L298N_IN4, L298N_ENB);
-  SR04_01.attach(SR04_01_TRIG, SR04_01_ECHO);
-  SR04_02.attach(SR04_02_TRIG, SR04_02_ECHO);
-  SR04_03.attach(SR04_03_TRIG, SR04_03_ECHO);
-  CdS_01.attach(CdS_01_PIN);
-  CdS_02.attach(CdS_02_PIN);
+  SR04_01.attach(SR04_01_TRIG, SR04_01_ECHO); // left
+  SR04_02.attach(SR04_02_TRIG, SR04_02_ECHO); // right
+  SR04_03.attach(SR04_03_TRIG, SR04_03_ECHO); // front
+  CdS_01.attach(CdS_01_PIN); // left
+  CdS_02.attach(CdS_02_PIN); // right
 }
 
 void loop() {
-  int mode = 0; // 0: linetrace, 1: ultrasonic, 2: obstacle, 3: test
-  float dist_01 = 0, dist_02 = 0, dist_03 = 0;
-  bool line_01 = false, line_02 = false; 
-  dist_01 = SR04_01.get_distance(); // left
-  dist_02 = SR04_02.get_distance(); // right
-  dist_03 = SR04_03.get_distance(); // front
-  line_01 = CdS_01.get_onblackline(); // left
-  line_02 = CdS_02.get_onblackline(); // right
-  
-  if (line_01 == false && line_02 == false) {
-    mode = 1; // ultrasonic
-  }
-  else if (dist_01 <= 50) { // とりあえず 50 mm
-    mode = 2; // obstacle
-  }
-  else {
-    mode = 0; // linetrace
-  }
 
-  if (TESTMODE) mode = 3;
-  
   if (DEBUG) {
+    line_01 = CdS_01.get_onblackline(); // left
+    line_02 = CdS_02.get_onblackline(); // right
+    dist_01 = SR04_01.get_distance(); // left
+    dist_02 = SR04_02.get_distance(); // right
+    dist_03 = SR04_03.get_distance(); // front
+
     char s[128];
-    sprintf(s, "mode: %d  CdS_left: %s  CdS_right: %s  ", mode, line_01 ? "true" : "false", line_02 ? "true" : "false");
+    sprintf(s, "CdS_left: %s  CdS_right: %s  ", line_01 ? "true" : "false", line_02 ? "true" : "false");
     Serial.print(s);
     Serial.print("SR04_left: ");
     Serial.print(dist_01);
@@ -85,86 +73,70 @@ void loop() {
     Serial.print(dist_03);
     Serial.print("\n");
   }
-
   
+  if (TESTMODE) testrun();
 
-  switch (mode) {
-  case 0:
-    linetrace(line_01, line_02);
-    break;
-
-  case 1:
-    ultrasonic(dist_01, dist_02, dist_03);
-    break;
-
-  case 2:
-    obstacle(line_01, line_02, dist_01, dist_02, dist_03);
-    break;
-  
-  case 3:
-    testrun();
-    break;
-
-  default:
-    L298N.stop();
-    break;
+  line_01 = CdS_01.get_onblackline(); // left
+  line_02 = CdS_02.get_onblackline(); // right
+  if (line_01 == true || line_02 == true) {
+    linetrace();
   }
-  
-  
+  else {
+    ultrasonic();
+  }
+
   delay(DELAY);
 }
 
-void linetrace(bool left, bool right) {
-  if (left == true && right == true) {
-    L298N.move_front(SPEED);
-  }
-  else if (left == true) {
-    L298N.left_wheel(SPEED);
-    L298N.right_wheel(0);
-  }
-  else {
-    L298N.right_wheel(SPEED);
-    L298N.left_wheel(0);
+void linetrace() {
+  unsigned long lost_time = 0, d = 0, last_d = 0;
+  bool lr = 0; // 0: left  1: right
+  while (true) {
+    d = (millis() - boot_time) / 250;
+    if (last_d == 0) last_d = d;
+    if (d != last_d) {
+      dist_03 = SR04_03.get_distance(); // front
+      if (dist_03 > 0 && dist_03 < 50) {
+        obstacle();
+      }
+    }
+
+    line_01 = CdS_01.get_onblackline(); // left
+    line_02 = CdS_02.get_onblackline(); // right
+    if (line_01 == true && line_02 == true) {
+      L298N.move_front(SPEED);
+    }
+    else if (line_01 == true) {
+      L298N.right_wheel(SPEED);
+      L298N.left_wheel(0);
+      lr = 0;
+    }
+    else if (line_02 == true) {
+      L298N.left_wheel(SPEED);
+      L298N.right_wheel(0);
+      lr = 1;
+    }
+    else {
+      if (lost_time == 0) lost_time = millis();
+      if (lost_time - millis() > 1000) break;
+      if (lr == 0) {
+        L298N.right_wheel(SPEED * 0.5);
+        L298N.left_wheel(0);
+      }
+      else {
+        L298N.left_wheel(SPEED * 0.5);
+        L298N.right_wheel(0);
+      }
+    }
   }
 }
 
-void ultrasonic(double left, double right, double front) {
-  if (front > 50 && abs(left - right) < 50) {
-    L298N.move_front(SPEED);
-  }
-  else if (front < 50 && left < right) {
-    L298N.turn_right(SPEED);
-  }
-  else if (front < 50 && left > right) {
-    L298N.turn_left(SPEED);
-  }
-  else if (front > 50 && left < right) {
-    L298N.left_wheel(SPEED);
-    L298N.right_wheel(SPEED * 0.75);
-  }
-  else if (front > 50 && left > right) {
-    L298N.left_wheel(SPEED * 0.75);
-    L298N.right_wheel(SPEED);
-  }
-  else {
-    L298N.move_back(SPEED * 0.5);
-  }
+void ultrasonic() {
+  
 }
 
-void obstacle(bool cds_left, bool cds_right, double us_front, double us_left, double us_right) {
-  L298N.turn_right(SPEED);
-  delay(500);
-  L298N.move_front(SPEED);
-  delay(1000);
-  L298N.turn_left(SPEED);
-  delay(500);
-  L298N.move_front(SPEED);
-  delay(1000);
-  L298N.turn_left(SPEED);
-  delay(500);
-  L298N.move_front(SPEED);
-  delay(1000);
-  // 🍊成
+void obstacle() {
+  
 }
 
 void testrun() {
