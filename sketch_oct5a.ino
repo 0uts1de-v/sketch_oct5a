@@ -105,13 +105,13 @@ void linetrace() {
     }
     else if (line_01 == true) {
       L298N.right_wheel(SPEED);
-      L298N.left_wheel(0);
+      L298N.left_wheel(SPEED * 0.5);
       lr = 0;
       lost_flag = false;
     }
     else if (line_02 == true) {
       L298N.left_wheel(SPEED);
-      L298N.right_wheel(0);
+      L298N.right_wheel(SPEED * 0.5);
       lr = 1;
       lost_flag = false;
     }
@@ -120,12 +120,10 @@ void linetrace() {
       lost_flag = true;
       if (lost_time - millis() > 2000) break;
       if (lr == 0) {
-        L298N.right_wheel(SPEED);
-        L298N.left_wheel(0);
+        L298N.turn_left(SPEED);
       }
       else {
-        L298N.left_wheel(SPEED);
-        L298N.right_wheel(0);
+        L298N.turn_right(SPEED);
       }
     }
     if (DEBUG) {
