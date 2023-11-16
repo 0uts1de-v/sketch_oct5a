@@ -7,10 +7,10 @@
 #define CDS_TRESHOLD 1.3
 // V
 
-#define SPEED 40
+#define SPEED 30
 // %
 
-#define DELAY 50
+#define DELAY 0
 // ms
 
 #define TIMEOUT 50000
