@@ -187,14 +187,18 @@ void noline() {
     }
 
     d = dist[0] - dist [1];
+    control = 0;
+    control += Kp * d;
+    if (!first) {
+      control += Ki * d * (t - t_);
+      control += Kd * (d - d_) / (t - t_);
+    }
 
     if (dist[0] < dist[1]) {
-      L298N.left_wheel(SPEED * 0.8);
-      L298N.right_wheel(SPEED * 0.4);
+      L298N.left_wheel(SPEED * control);
     }
     else {
-      L298N.left_wheel(SPEED * 0.4);
-      L298N.right_wheel(SPEED * 0.8);
+      L298N.right_wheel(SPEED * control);
     }
     first = false;
   }
