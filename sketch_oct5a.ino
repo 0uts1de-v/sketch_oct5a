@@ -173,10 +173,6 @@ void noline() {
   double integral = 0, control = 0;
   
   while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline()) {
-    d[1] = d[0];
-    t[1] = t[0];
-    t[0] = millis();
-
     for (size_t i = 0; i < VL53L1X_count; ++i) {
       dist[i] = VL53L1X_[i].read(); // l, r, f
       if (dist[i] < 0) dist[i] = 999;
@@ -189,6 +185,9 @@ void noline() {
       L298N.move_front(SPEED);
     }
 
+    d[1] = d[0];
+    t[1] = t[0];
+    t[0] = millis();
     d[0] = dist[0] - dist [1];
     control = 0;
     control += Kp * d[0];
