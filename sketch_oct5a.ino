@@ -168,14 +168,14 @@ void linetrace() {
 void noline() {
   bool first = true;
   const double Kp = 20, Ki = 0.5, Kd = 0.5;
-  unsigned long t = 0, t_ = 0;
-  long d = 0, d_ = 0;
-  double control = 0;
+  unsigned long t[2] = {0, 0};
+  long d[2] = {0, 0};
+  double integral = 0, control = 0;
   
   while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline()) {
-    d_ = d;
-    t_ = t;
-    t = millis();
+    d[1] = d[0];
+    t[1] = t[0];
+    t[0] = millis();
 
     for (size_t i = 0; i < VL53L1X_count; ++i) {
       dist[i] = VL53L1X_[i].read(); // l, r, f
@@ -186,12 +186,13 @@ void noline() {
       L298N.turn_right(SPEED);
     }
 
-    d = dist[0] - dist [1];
+    d[0] = dist[0] - dist [1];
     control = 0;
-    control += Kp * d;
+    control += Kp * d[0];
     if (!first) {
-      control += Ki * (d + d_) * (t - t_) / 2;
-      control += Kd * (d - d_) / (t - t_);
+      integral += (d[0] + d[1]) * (t[0] - t[1]) / 2;
+      control += Ki * (d[0] + d[1]) * (t[0] - t[1]) / 2;
+      control += Kd * (d[0] - d[1]) / (t[0] - t[1]);
     }
 
     if (dist[0] < dist[1]) {
