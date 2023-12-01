@@ -166,30 +166,47 @@ void linetrace() {
 }
 
 void noline() {
-  for (size_t i = 0; i < VL53L1X_count; ++i) {
-    dist[i] = VL53L1X_[i].read(); // l, r, f
-    if (dist[i] < 0) dist[i] = 999;
+  bool first = true;
+  const double Kp = 20, Ki = 0.5, Kd = 0.5;
+  unsigned long t = 0, t_ = 0;
+  long d = 0, d_ = 0;
+  double control = 0;
+  
+  while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline()) {
+    d_ = d;
+    t_ = t;
+    t = millis();
+
+    for (size_t i = 0; i < VL53L1X_count; ++i) {
+      dist[i] = VL53L1X_[i].read(); // l, r, f
+      if (dist[i] < 0) dist[i] = 999;
+    }
+  
+    if (dist[2] < 100) { // 前方障害物で右折
+      L298N.turn_right(SPEED);
+    }
+
+    d = dist[0] - dist [1];
+
+    if (dist[0] < dist[1]) {
+      L298N.left_wheel(SPEED * 0.8);
+      L298N.right_wheel(SPEED * 0.4);
+    }
+    else {
+      L298N.left_wheel(SPEED * 0.4);
+      L298N.right_wheel(SPEED * 0.8);
+    }
+    first = false;
   }
   
-  if (dist[2] < 100) { // 前方障害物で右折
-    L298N.turn_right(SPEED);
-  }
-
-  if (dist[0] < dist[1]) {
-    L298N.left_wheel(SPEED * 0.8);
-    L298N.right_wheel(SPEED * 0.4);
-  }
-  else {
-    L298N.left_wheel(SPEED * 0.4);
-    L298N.right_wheel(SPEED * 0.8);
-  }
+  
 }
 
 void obstacle() {
   while (VL53L1X_[0].read() > 150) {
     L298N.turn_right(SPEED);
   }
-  while (CdS[0].get_onblackline() || CdS[1].get_onblackline()) {
+  while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline()) {
     while (VL53L1X_[0].read() < 150) {
       L298N.move_front(SPEED);
     }
