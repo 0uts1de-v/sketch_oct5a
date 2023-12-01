@@ -190,7 +190,7 @@ void noline() {
     control = 0;
     control += Kp * d;
     if (!first) {
-      control += Ki * d * (t - t_);
+      control += Ki * (d + d_) * (t - t_) / 2;
       control += Kd * (d - d_) / (t - t_);
     }
 
@@ -202,8 +202,6 @@ void noline() {
     }
     first = false;
   }
-  
-  
 }
 
 void obstacle() {
