@@ -55,7 +55,7 @@ class L298N_ {
             digitalWrite(IN1_, LOW);
             digitalWrite(IN2_, HIGH);
         }
-        analogWrite(ENA_, abs(speed) * 255 / 100);
+        analogWrite(ENA_, min(abs(speed), 100) * 255 / 100);
       }
 
       void right_wheel(double speed) {
@@ -67,7 +67,7 @@ class L298N_ {
             digitalWrite(IN3_, LOW);
             digitalWrite(IN4_, HIGH);
         }
-        analogWrite(ENB_, abs(speed) * 255 / 100);
+        analogWrite(ENB_, min(abs(speed), 100) * 255 / 100);
       }
       
       
