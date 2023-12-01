@@ -182,8 +182,11 @@ void noline() {
       if (dist[i] < 0) dist[i] = 999;
     }
   
-    if (dist[2] < 100) { // 前方障害物で右折
-      L298N.turn_right(SPEED);
+    if (dist[2] < 50) { // 前方障害物で後退
+      L298N.move_back(SPEED);
+    }
+    else {
+      L298N.move_front(SPEED);
     }
 
     d[0] = dist[0] - dist [1];
@@ -197,9 +200,11 @@ void noline() {
 
     if (dist[0] < dist[1]) {
       L298N.left_wheel(SPEED * control);
+      L298N.right_wheel(0);
     }
     else {
       L298N.right_wheel(SPEED * control);
+      L298N.left_wheel(0);
     }
     first = false;
   }
