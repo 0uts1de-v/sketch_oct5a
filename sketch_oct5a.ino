@@ -28,6 +28,7 @@ void linetrace();
 void noline();
 void obstacle();
 void testrun();
+void print_debug();
 //----------END prototype----------
 
 //----------START global var----------
@@ -40,10 +41,9 @@ bool line[2] = {false, false};
 //----------END global var----------
 
 void setup() {
-  if (DEBUG) {
-    Serial.begin(115200);
-    Serial.println("Setup begin.");
-  }
+  Serial.begin(115200);
+  if (DEBUG) Serial.println("Setup begin.");
+  
   Wire.begin();
   Wire.setClock(400000); // use 400 kHz I2C
 
@@ -59,9 +59,11 @@ void setup() {
     VL53L1X_[i].setTimeout(50);
     VL53L1X_[i].init();
     if (!VL53L1X_[i].init()) {
-      Serial.print("Failed to detect and initialize sensor ");
-      Serial.println(i);
-      Serial.print("Retrying...");
+      if (DEBUG) {
+        Serial.print("Failed to detect and initialize sensor ");
+        Serial.println(i);
+        Serial.print("Retrying...");
+      }
       asm volatile ("  jmp 0");
     }
     VL53L1X_[i].setAddress(0x2A + i);
@@ -76,7 +78,7 @@ void setup() {
     CdS[i].attach(CdS_PIN[i]);
   }
 
-  Serial.print("Setup done.");  
+  if (DEBUG) Serial.print("Setup done.");  
 }
 
 void loop() {  
@@ -93,18 +95,7 @@ void loop() {
     noline();
   }
 
-  if (DEBUG) {
-    String s;
-    for (size_t i = 0; i < CdS_count; ++i) {
-      s += "CdS_" + String(i) + line[0] ? "true" : "false";
-    }
-    for (size_t i = 0; i < VL53L1X_count; ++i) {
-      s += "VL53L1X_" + String(i) + String(dist[i]);
-    }
-    Serial.println(s);
-  }
-
-  delay(DELAY);
+  print_debug();
 }
 
 void linetrace() {
@@ -206,19 +197,24 @@ void noline() {
       L298N.left_wheel(0);
     }
     first = false;
+
+    print_debug();
   }
 }
 
 void obstacle() {
   while (VL53L1X_[0].read() > 150) {
     L298N.turn_right(SPEED);
+    print_debug();
   }
   while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline()) {
     while (VL53L1X_[0].read() < 150) {
       L298N.move_front(SPEED);
+      print_debug();
     }
     while (VL53L1X_[0].read() > 150) {
       L298N.turn_left(SPEED);
+      print_debug();
     }
   }
 }
@@ -229,5 +225,19 @@ void testrun() {
     auto d = millis() - boot_time;
     if ((d / 2000)%2) L298N.turn_left(SPEED);
     else L298N.turn_right(SPEED);
+    print_debug();
   }  
+}
+
+void print_debug() {
+  if (DEBUG) {
+    String s;
+    for (size_t i = 0; i < CdS_count; ++i) {
+      s += "CdS_" + String(i) + line[0] ? "true" : "false";
+    }
+    for (size_t i = 0; i < VL53L1X_count; ++i) {
+      s += "VL53L1X_" + String(i) + String(dist[i]);
+    }
+    Serial.println(s);
+  }
 }
