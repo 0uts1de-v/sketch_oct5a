@@ -45,31 +45,40 @@ void setup() {
   if (DEBUG) Serial.println("Setup begin.");
   
   Wire.begin();
-  Wire.setClock(400000); // use 400 kHz I2C
+
+  if (DEBUG) Serial.println("I2C started.");
 
   for (size_t i = 0; i < VL53L1X_count; ++i) {
     pinMode(VL53L1X_XSHUT[i], OUTPUT);
     digitalWrite(VL53L1X_XSHUT[i], LOW);
   }
-  for (size_t i = 0; i < VL53L1X_count; ++i) {
-    delay(50);
-    // pinMode(VL53L1X_XSHUT[i], INPUT);
-    digitalWrite(VL53L1X_XSHUT[i], HIGH);
-    delay(50);
-    VL53L1X_[i].setTimeout(50);
-    VL53L1X_[i].init();
-    if (!VL53L1X_[i].init()) {
+
+  if (DEBUG) Serial.println("All sensors shutted down.");
+  
+  for (size_t i = 0; i < VL53L1X_count; ++i) { 
+    //digitalWrite(VL53L1X_XSHUT[i], HIGH);
+    pinMode(VL53L1X_XSHUT[i], INPUT);
+    delay(10);
+    VL53L1X_[i].setTimeout(500);   
+    if (VL53L1X_[i].init() == false) {
       if (DEBUG) {
         Serial.print("Failed to detect and initialize sensor ");
         Serial.println(i);
         Serial.print("Retrying...");
       }
+      delay(100);
       asm volatile ("  jmp 0");
     }
-    VL53L1X_[i].setAddress(0x2A + i);
-    VL53L1X_[i].setDistanceMode(VL53L1X::Medium);
-    VL53L1X_[i].setMeasurementTimingBudget(20000);
-    VL53L1X_[i].startContinuous(20);
+    else {
+      if (DEBUG) {
+        Serial.print("Initialized VL53L1X_");
+        Serial.println(i);
+      }
+    }
+    VL53L1X_[i].setAddress(0x2A + i * 2);
+    // VL53L1X_[i].setDistanceMode(VL53L1X::Long);
+    // VL53L1X_[i].setMeasurementTimingBudget(5000);
+    VL53L1X_[i].startContinuous(50);   
   }
 
   L298N.attach(L298N_IN1, L298N_IN2, L298N_ENA, L298N_IN3, L298N_IN4, L298N_ENB);
@@ -78,7 +87,7 @@ void setup() {
     CdS[i].attach(CdS_PIN[i]);
   }
 
-  if (DEBUG) Serial.print("Setup done.");  
+  if (DEBUG) Serial.println("Setup done.");  
 }
 
 void loop() {  
@@ -106,7 +115,7 @@ void linetrace() {
     d = (millis() - boot_time) / 250;
     if (last_d == 0) last_d = d;
     if (d != last_d) {
-      dist[2] = VL53L1X_[2].read(); // front
+      //dist[2] = VL53L1X_[2].read(); // front
       if (dist[2] > 0 && dist[2] < 150) {
         obstacle();
         break;
@@ -143,16 +152,9 @@ void linetrace() {
         L298N.turn_right(SPEED);
       }
     }
-    if (DEBUG) {
-      String s;
-      for (size_t i = 0; i < CdS_count; ++i) {
-        s += "CdS_" + String(i) + line[0] ? "true" : "false";
-      }
-      for (size_t i = 0; i < VL53L1X_count; ++i) {
-        s += "VL53L1X_" + String(i) + String(dist[i]);
-      }
-      Serial.println(s);
-    }
+    
+    print_debug();
+    
   }
 }
 
@@ -187,6 +189,8 @@ void noline() {
       control += Ki * (d[0] + d[1]) * (t[0] - t[1]) / 2;
       control += Kd * (d[0] - d[1]) / (t[0] - t[1]);
     }
+
+    if (control > 1) control=1;
 
     if (dist[0] < dist[1]) {
       L298N.left_wheel(SPEED * control);
@@ -233,10 +237,10 @@ void print_debug() {
   if (DEBUG) {
     String s;
     for (size_t i = 0; i < CdS_count; ++i) {
-      s += "CdS_" + String(i) + line[0] ? "true" : "false";
+      s += "CdS_" + String(i) + line[i] ? "true  " : "false ";
     }
     for (size_t i = 0; i < VL53L1X_count; ++i) {
-      s += "VL53L1X_" + String(i) + String(dist[i]);
+      s += "\tVL53L1X_" + String(i) + ": " + String(dist[i]);
     }
     Serial.println(s);
   }

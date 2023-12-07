@@ -23,6 +23,7 @@ class CdS_ {
       // on the blackline -> true
       double voltage = analogRead(PIN_) * 5 / 1023.0;
       // if (DEBUG) Serial.print(voltage);
+      if (DEBUG) Serial.println(voltage);
       if (voltage <= CDS_TRESHOLD) {
         return true;
       }

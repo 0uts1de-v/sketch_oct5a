@@ -4,10 +4,10 @@
 #define TEMPERTURE 25
 // ℃
 
-#define CDS_TRESHOLD 1.3
+#define CDS_TRESHOLD 0.5
 // V
 
-#define SPEED 30
+#define SPEED 15
 // %
 
 #define DELAY 0
