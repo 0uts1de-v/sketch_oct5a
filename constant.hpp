@@ -1,5 +1,4 @@
-#ifndef _CONSTANT_HPP
-#define _CONSTANT_HPP
+#pragma once
 
 #define TEMPERTURE 25
 // ℃
@@ -22,4 +21,5 @@
 #define TESTMODE false
 // 走行テスト
 
-#endif
+#define DISTANCE_SENSOR_MODE 0
+// 0: SR04  1: VL53L1X
