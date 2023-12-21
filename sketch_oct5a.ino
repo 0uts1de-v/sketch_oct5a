@@ -140,7 +140,7 @@ void linetrace()
             {
                 dist[i] = DIST_SENSOR[i].get_distance();
             }
-            if (dist[0] < 300 && dist[1] < 300)
+            if (dist[0] < 400 && dist[1] < 400)
                 noline();
 
             if (lost_flag == false)
@@ -165,7 +165,7 @@ void linetrace()
 void noline()
 {
     bool first = true;
-    const double Kp = 5, Ki = 1, Kd = 1;
+    const double Kp = 1, Ki = 1, Kd = 1;
     unsigned long t[2] = {0, 0};
     long d[2] = {0, 0};
     double integral = 0, control = 0;
@@ -207,12 +207,12 @@ void noline()
         if (dist[0] < dist[1])
         {
             L298N.left_wheel(SPEED * control);
-            L298N.right_wheel(0);
+            L298N.right_wheel(SPEED * control * 0.5);
         }
         else
         {
             L298N.right_wheel(SPEED * control);
-            L298N.left_wheel(0);
+            L298N.left_wheel(SPEED * control * 0.5);
         }
         first = false;
 
@@ -222,7 +222,7 @@ void noline()
 
 void obstacle()
 {
-    while (DIST_SENSOR[0].get_distance() > 150)
+    while (DIST_SENSOR[0].get_distance() > 125)
     {
         L298N.turn_right(SPEED * 0.9);
         print_debug();
