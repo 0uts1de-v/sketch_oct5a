@@ -130,8 +130,8 @@ void VL53L1X_setup(DIST_SENSOR_ *DIST_SENSOR, const int VL53L1X_count)
 
     for (size_t i = 0; i < VL53L1X_count; ++i)
     {
-        // digitalWrite(VL53L1X_XSHUT[i], HIGH);
-        pinMode(DIST_SENSOR[i].XSHUT_, INPUT);
+        digitalWrite(DIST_SENSOR[i].XSHUT_, HIGH);
+        //pinMode(DIST_SENSOR[i].XSHUT_, INPUT);
         delay(10);
         DIST_SENSOR[i].VL53L1X_.setTimeout(500);
         if (DIST_SENSOR[i].VL53L1X_.init() == false)

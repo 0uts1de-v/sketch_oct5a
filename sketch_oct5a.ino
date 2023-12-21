@@ -103,8 +103,8 @@ void linetrace()
             last_d = d;
         if (d != last_d)
         {
-            // dist[2] = VL53L1X_[2].read(); // front
-            if (dist[2] > 0 && dist[2] < 150)
+            dist[2] = DIST_SENSOR[2].get_distance(); // front
+            if (dist[2] > 0 && dist[2] < 100)
             {
                 obstacle();
                 break;
@@ -136,6 +136,13 @@ void linetrace()
         }
         else
         {
+            for (size_t i = 0; i < 2; ++i)
+            {
+                dist[i] = DIST_SENSOR[i].get_distance();
+            }
+            if (dist[0] < 300 && dist[1] < 300)
+                noline();
+
             if (lost_flag == false)
                 lost_time = millis();
             lost_flag = true;
@@ -158,7 +165,7 @@ void linetrace()
 void noline()
 {
     bool first = true;
-    const double Kp = 20, Ki = 0.5, Kd = 0.5;
+    const double Kp = 5, Ki = 1, Kd = 1;
     unsigned long t[2] = {0, 0};
     long d[2] = {0, 0};
     double integral = 0, control = 0;
@@ -178,7 +185,7 @@ void noline()
         }
         else
         {
-            L298N.move_front(SPEED);
+            L298N.stop();
         }
 
         d[1] = d[0];
@@ -217,19 +224,19 @@ void obstacle()
 {
     while (DIST_SENSOR[0].get_distance() > 150)
     {
-        L298N.turn_right(SPEED);
+        L298N.turn_right(SPEED * 0.9);
         print_debug();
     }
     while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline())
     {
-        while (DIST_SENSOR[0].get_distance() < 150)
+        while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() < 150)
         {
             L298N.move_front(SPEED);
             print_debug();
         }
-        while (DIST_SENSOR[0].get_distance() > 150)
+        while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() > 150)
         {
-            L298N.turn_left(SPEED);
+            L298N.turn_left(SPEED * 0.9);
             print_debug();
         }
     }

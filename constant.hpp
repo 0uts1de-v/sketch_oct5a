@@ -3,10 +3,10 @@
 #define TEMPERTURE 25
 // ℃
 
-#define CDS_TRESHOLD 0.5
+#define CDS_TRESHOLD 1.5
 // V
 
-#define SPEED 15
+#define SPEED 18
 // %
 
 #define DELAY 0
@@ -21,5 +21,5 @@
 #define TESTMODE false
 // 走行テスト
 
-#define DISTANCE_SENSOR_MODE 0
+#define DISTANCE_SENSOR_MODE 1
 // 0: SR04  1: VL53L1X
