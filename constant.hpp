@@ -6,7 +6,7 @@
 #define CDS_TRESHOLD 1.5
 // V
 
-#define SPEED 18
+#define SPEED 16
 // %
 
 #define DELAY 0

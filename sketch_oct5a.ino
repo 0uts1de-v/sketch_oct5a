@@ -65,6 +65,7 @@ void setup()
         CdS[i].attach(CdS_PIN[i]);
     }
 
+
     if (DEBUG)
         Serial.println("Setup done.");
 }
@@ -104,7 +105,7 @@ void linetrace()
         if (d != last_d)
         {
             dist[2] = DIST_SENSOR[2].get_distance(); // front
-            if (dist[2] > 0 && dist[2] < 100)
+            if (dist[2] > 0 && dist[2] < 125)
             {
                 obstacle();
                 break;
@@ -206,13 +207,13 @@ void noline()
 
         if (dist[0] < dist[1])
         {
-            L298N.left_wheel(SPEED * control);
-            L298N.right_wheel(SPEED * control * 0.5);
+            L298N.left_wheel(SPEED-2);
+            L298N.right_wheel((SPEED-2) * control * 0.5);
         }
         else
         {
-            L298N.right_wheel(SPEED * control);
-            L298N.left_wheel(SPEED * control * 0.5);
+            L298N.right_wheel(SPEED-2);
+            L298N.left_wheel((SPEED-2) * control * 0.5);
         }
         first = false;
 
@@ -222,22 +223,29 @@ void noline()
 
 void obstacle()
 {
-    while (DIST_SENSOR[0].get_distance() > 125)
+    L298N.stop();
+
+    while (true)
     {
-        L298N.turn_right(SPEED * 0.9);
-        print_debug();
+        L298N.turn_right(SPEED);
+        if (DIST_SENSOR[0].get_distance() < 175) break;
+        //print_debug();
     }
+    L298N.turn_left(SPEED);
+    delay(500);
+    L298N.move_front(SPEED);
+    delay(1500);
     while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline())
     {
         while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() < 150)
         {
             L298N.move_front(SPEED);
-            print_debug();
+            //print_debug();
         }
         while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() > 150)
         {
-            L298N.turn_left(SPEED * 0.9);
-            print_debug();
+            L298N.turn_left(SPEED);
+            //print_debug();
         }
     }
 }
@@ -262,7 +270,7 @@ void print_debug()
         String s;
         for (size_t i = 0; i < CdS_count; ++i)
         {
-            s += "CdS_" + String(i) + line[i] ? "true  " : "false ";
+            s += "CdS_" + String(i) + (line[i] ? ": true  " : ": false ");
         }
         for (size_t i = 0; i < dist_sensor_count; ++i)
         {
