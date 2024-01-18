@@ -65,7 +65,6 @@ void setup()
         CdS[i].attach(CdS_PIN[i]);
     }
 
-
     if (DEBUG)
         Serial.println("Setup done.");
 }
@@ -208,13 +207,13 @@ void noline()
 
         if (dist[0] < dist[1])
         {
-            L298N.left_wheel(SPEED-1);
-            L298N.right_wheel((SPEED-1) * (1 - control) * 0.5);
+            L298N.left_wheel(SPEED - 1);
+            L298N.right_wheel((SPEED - 1) * (1 - control) * 0.5);
         }
         else
         {
-            L298N.right_wheel(SPEED-1);
-            L298N.left_wheel((SPEED-1) * (1 - control) * 0.5);
+            L298N.right_wheel(SPEED - 1);
+            L298N.left_wheel((SPEED - 1) * (1 - control) * 0.5);
         }
         first = false;
 
@@ -229,8 +228,9 @@ void obstacle()
     while (true)
     {
         L298N.turn_right(SPEED);
-        if (DIST_SENSOR[0].get_distance() < 175) break;
-        //print_debug();
+        if (DIST_SENSOR[0].get_distance() < 175)
+            break;
+        // print_debug();
     }
     L298N.turn_left(SPEED);
     delay(250);
@@ -242,12 +242,12 @@ void obstacle()
         while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() < 150)
         {
             L298N.move_front(SPEED);
-            //print_debug();
+            // print_debug();
         }
         while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() > 150)
         {
             L298N.turn_left(SPEED);
-            //print_debug();
+            // print_debug();
         }
     }
 }
