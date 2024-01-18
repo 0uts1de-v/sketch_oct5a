@@ -137,6 +137,7 @@ void linetrace()
         }
         else
         {
+            L298N.stop();
             for (size_t i = 0; i < 2; ++i)
             {
                 dist[i] = DIST_SENSOR[i].get_distance();
@@ -192,7 +193,7 @@ void noline()
         d[1] = d[0];
         t[1] = t[0];
         t[0] = millis();
-        d[0] = dist[0] - dist[1];
+        d[0] = abs(dist[0] - dist[1]) / 10;
         control = 0;
         control += Kp * d[0];
         if (!first)
@@ -207,13 +208,13 @@ void noline()
 
         if (dist[0] < dist[1])
         {
-            L298N.left_wheel(SPEED-2);
-            L298N.right_wheel((SPEED-2) * control * 0.5);
+            L298N.left_wheel(SPEED-1);
+            L298N.right_wheel((SPEED-1) * (1 - control) * 0.5);
         }
         else
         {
-            L298N.right_wheel(SPEED-2);
-            L298N.left_wheel((SPEED-2) * control * 0.5);
+            L298N.right_wheel(SPEED-1);
+            L298N.left_wheel((SPEED-1) * (1 - control) * 0.5);
         }
         first = false;
 
@@ -232,9 +233,10 @@ void obstacle()
         //print_debug();
     }
     L298N.turn_left(SPEED);
-    delay(500);
+    delay(250);
+    L298N.stop();
     L298N.move_front(SPEED);
-    delay(1500);
+    delay(750);
     while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline())
     {
         while (!CdS[0].get_onblackline() && !CdS[1].get_onblackline() && DIST_SENSOR[0].get_distance() < 150)
